@@ -1,0 +1,52 @@
+---
+title: "Hot Spots- data clean up"
+output: html_notebook
+---
+
+The purpose of this script is to clean up and modify the data PSRE parasite 
+infection data from the Bay Area of Califronia from 2009 - 2015
+
+The purpose of this data is to utilize a guassian process model to understand
+spatial and temporal patterns of hot spots of parasite load. 
+
+
+Setting the working directory and entering the data below
+
+```{r}
+setwd("/Users/travismcdevitt-galles/Desktop/Current_Projects/Hot-Spots")
+
+raw.df <- read.csv("./Raw_Data/raw_host_spots.csv")
+
+names(raw.df)
+
+```
+
+Currently this inital data format includes the follow:
+
+Meta data
+    Site year - combination of site code and year sampled 
+    assessment code - Combination of site code and year month and day sampled
+    Year - year sampled
+    Site code - site code 
+    Site name - name of site
+    years_sampled_2009 - number of times sampled since 2009 : range from 1-6
+    PropertyName_1 - The owner of the property the site is found in
+    MetaComm_1 - the metacommunity where the site is locater n =  9
+    County - the specific county the site is found in
+    FULLSAMPLE : 1 or 0 , whether or not it was a full sample 
+                a full sample is doing dip nets and collecting both frogs and
+                snails
+    Latitude_1 : the latitude of the site
+    Longitude_1 : the longitude of the site
+    PONDAREA : the area of the sites
+    PERIMETER : the perimeter of the site ( this was take more consistent than
+                area)
+    Sweeps1 : Number of dipnet sweeps done at visit: range 0 - 18
+    PSRE_SW_1 : number of PSRE larvae per sweep , metric of host density
+    HELI_.SW_1 : number of the intermediate host detected per sweep
+    psrediss3 : number of PSRE dissected to quantify parasite load:
+                range 0 - 60 ( HOLY SHIT 60 IS A LOT!!!!)
+    PSREECHINO_3 : mean level Echino infection per PSRE dissected
+    PSRERIB_3 : mean level of RIB infection per PSRE dissected
+
+    
