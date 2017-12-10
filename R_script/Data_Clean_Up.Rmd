@@ -50,3 +50,40 @@ Meta data
     PSRERIB_3 : mean level of RIB infection per PSRE dissected
 
     
+ Next step is to identify any problems with the data set
+ 
+```{r, echo=F}
+
+unique(raw.df$SiteCode_1) # sites look good
+
+unique(raw.df$AssmtYear_1) # years look good
+
+unique(raw.df$years_sampled_2009) # looks good
+
+unique(raw.df$PropertyName_1)  # one issue the nature conservancy
+
+for( i in 1:nrow(raw.df)){
+    if( raw.df$PropertyName_1[i] == "The Nature conservancy Kammerer Ranch" ){
+    raw.df$PropertyName_1[i] <- "The Nature Conservancy Kammerer Ranch"
+    }
+}
+
+unique(raw.df$MetaComm_1) # looks good
+
+unique( raw.df$County)
+
+```
+
+
+Issues with either typos or discrepencies between groups
+
+
+Next step to add an addition variable, total rib and total echino observed
+
+```{r}
+
+
+
+```
+
+
