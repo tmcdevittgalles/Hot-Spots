@@ -15,6 +15,8 @@ Setting the working directory and entering the data below
 ```{r}
 setwd("/Users/travismcdevitt-galles/Desktop/Current_Projects/Hot-Spots")
 
+library(tidyverse)
+
 raw.df <- read.csv("./Raw_Data/raw_host_spots.csv")
 
 names(raw.df)
@@ -82,7 +84,21 @@ Next step to add an addition variable, total rib and total echino observed
 
 ```{r}
 
+all.visit.df <- raw.df
 
+all.visit.df$Total.RIB <- all.visit.df$psrediss3 * all.visit.df$PSRERIB_3 
+
+all.visit.df$Total.Echino <- all.visit.df$psrediss3 * all.visit.df$PSREECHINO_3
+
+full.visit.df <- filter( raw.df , FULLSAMPLE == 1)
+
+
+full.visit.df$Total.RIB <- full.visit.df$psrediss3 * full.visit.df$PSRERIB_3
+
+full.visit.df$Total.Echino <- full.visit.df$psrediss3 * full.visit.df$PSREECHINO_3
+
+
+full.dissect.df <-  filter( full.visit.df, psrediss3 > 0 )
 
 ```
 
