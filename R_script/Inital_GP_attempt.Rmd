@@ -1,0 +1,112 @@
+---
+title: "Hot Spots : Exploring Guassian Processes in disease hot spots"
+output: html_notebook
+---
+
+Reading in the data and loading the required packages
+
+```{r}
+
+setwd("/Users/travismcdevitt-galles/Desktop/Current_Projects/Hot-Spots")
+
+library(tidyverse)
+library(rethinking)
+
+raw.df <- read.csv("./Data/Clean_up_Data/full_dissect.csv")
+
+raw.df <- raw.df[,-1]
+
+
+```
+
+The initial  attempt would be to look at spatial correlation structure at the
+site across all years, then potentially break it down by year to see if the 
+spatial signature changes
+
+*** Still need to think how to plot these values ???
+
+
+
+Constructing the distance matrix between all sites
+
+```{r}
+
+# For the first model constution I will focus on all sites without subsetting 
+# based on number of total visits later models i will focus on sites that meet
+#  a particular criteria such as number of sampleing events > 3 
+
+# Below function pulls out all distinct sitename and its corresponding lat and 
+# long
+
+distinct_df <- raw.df %>%
+                group_by(SiteName, Latitude_1, Longitude_1) %>%
+                distinct(SiteName)
+
+# Distance matrix based on euclidian distance from lat and long in meters
+dist_mat <- geosphere::distm(distinct_df[,3:2]) 
+
+# adding row and column names
+
+rownames(dist_mat) <- distinct_df$SiteName
+colnames(dist_mat) <- distinct_df$SiteName
+
+
+```
+
+First attempt at building an all year spatial GP model
+
+lets do this shit
+
+```{r}
+
+# making all rib count intergers
+
+raw.df$Total_RIB <- as.integer(round( raw.df$Total.RIB ,0))
+
+GP_Rib_m1 <- map2stan(
+    alist(
+        Total_RIB ~ dgampois( lambda, scale),
+        log( lambda ) <-  s[year] + 1*log(psrediss3),
+        #a ~ dnorm(0,10), # global intercept
+        s[year] ~ dnorm(0,10) , # adjustment for year
+        b <- 1, # fixed value for our offset
+        scale ~ dcauchy(0,1) # overdisersion parameter for our gamma poisson 
+       # gp[SiteName] ~ GPL2( dist_mat, etasq, rhosq, theta), # GP process
+        #etasq ~ dcauchy(0,1), # eta prior for max covaraince
+        #rhos ~ dcauchy(0,1), # rho prior for decay rate
+        #theta ~ dcauchy(0,1) # within site level covariance prior
+    ) ,
+    data = list(
+        Total_RIB = raw.df$Total_RIB,
+        year = as.factor(raw.df$AssmtYear_1),
+        SiteName = raw.df$SiteName,
+        psrediss3 = raw.df$psrediss3,
+        dist_mat = as.matrix(dist_mat)
+    ) ,
+    warmup = 2000,
+    iter = 1e4,
+    chains = 4
+)
+
+
+precis(GP_Rib_m1, depth= 2)
+
+
+
+year.sum <- raw.df %>% group_by(AssmtYear_1) %>%
+    summarise( m.rib = mean(PSRERIB_3))
+
+year.sum
+```
+
+
+So building one giant models seems tricky, so instead lets simply break
+down the 
+
+We will start with the year 2009
+
+```{r}
+
+
+
+```

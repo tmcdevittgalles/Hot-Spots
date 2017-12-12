@@ -88,14 +88,27 @@ all.visit.df <- raw.df
 
 all.visit.df$Total.RIB <- all.visit.df$psrediss3 * all.visit.df$PSRERIB_3 
 
+all.visit.df$Total_RIB <- as.integer(round( all.visit.df$Total.RIB ,0))
+
+
 all.visit.df$Total.Echino <- all.visit.df$psrediss3 * all.visit.df$PSREECHINO_3
+
+all.visit.df$Total_Echino <- as.integer(round( all.visit.df$Total.Echino ,0))
+
+
 
 full.visit.df <- filter( raw.df , FULLSAMPLE == 1)
 
 
 full.visit.df$Total.RIB <- full.visit.df$psrediss3 * full.visit.df$PSRERIB_3
 
+full.visit.df$Total_RIB <- as.integer(round( full.visit.df$Total.RIB ,0))
+
+
 full.visit.df$Total.Echino <- full.visit.df$psrediss3 * full.visit.df$PSREECHINO_3
+
+full.visit.df$Total_Echino <- as.integer(round( full.visit.df$Total.Echino ,0))
+
 
 
 full.dissect.df <-  filter( full.visit.df, psrediss3 > 0 )
@@ -103,3 +116,13 @@ full.dissect.df <-  filter( full.visit.df, psrediss3 > 0 )
 ```
 
 
+Now we will export the csv file for the full visits and with at least 1 psre
+dissected
+
+
+```{r}
+
+
+write.csv( full.dissect.df, file = "full_dissect.csv")
+
+```
