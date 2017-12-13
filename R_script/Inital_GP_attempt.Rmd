@@ -61,7 +61,8 @@ lets do this shit
 
 # making all rib count intergers
 
-raw.df$Total_RIB <- as.integer(round( raw.df$Total.RIB ,0))
+all_year_df <- raw.df
+
 
 GP_Rib_m1 <- map2stan(
     alist(
@@ -71,10 +72,10 @@ GP_Rib_m1 <- map2stan(
         s[year] ~ dnorm(0,10) , # adjustment for year
         b <- 1, # fixed value for our offset
         scale ~ dcauchy(0,1) # overdisersion parameter for our gamma poisson 
-       # gp[SiteName] ~ GPL2( dist_mat, etasq, rhosq, theta), # GP process
-        #etasq ~ dcauchy(0,1), # eta prior for max covaraince
-        #rhos ~ dcauchy(0,1), # rho prior for decay rate
-        #theta ~ dcauchy(0,1) # within site level covariance prior
+        gp[SiteName] ~ GPL2( dist_mat, etasq, rhosq, theta), # GP process
+        etasq ~ dcauchy(0,1), # eta prior for max covaraince
+        rhosq ~ dcauchy(0,1), # rho prior for decay rate
+        theta ~ dcauchy(0,1) # within site level covariance prior
     ) ,
     data = list(
         Total_RIB = raw.df$Total_RIB,
@@ -106,7 +107,126 @@ down the
 We will start with the year 2009
 
 ```{r}
+yr09_df <- filter( raw.df, AssmtYear_1 == 2009 )
 
+yr09_df$site_index <- 1:nrow(yr09_df)
+distinct_df <- yr09_df %>%
+                group_by(SiteName, Latitude_1, Longitude_1) %>%
+                distinct(SiteName)
+
+# Distance matrix based on euclidian distance from lat and long in meters
+dist_mat <- geosphere::distm(distinct_df[,3:2]) 
+
+# adding row and column names
+
+rownames(dist_mat) <- distinct_df$SiteName
+colnames(dist_mat) <- distinct_df$SiteName
+
+dist_mat_km <- dist_mat/1000
+
+
+GP_Rib_09 <- map2stan(
+    alist(
+        Total_RIB ~ dgampois( lambda, scale),
+        log( lambda ) <- gp[SiteName] + 1*log(psrediss3),
+        #tercept
+        b <- 1, # fixed value for our offset
+        scale ~ dcauchy(0,1), # overdisersion parameter for our gamma poisson 
+        gp[SiteName] ~ GPL2( dist_mat, etasq, rhosq, 0.1 ), # GP process
+        etasq ~ dcauchy(0,1), # eta prior for max covaraince
+        rhosq ~ dcauchy(0,1) # rho prior for decay rate
+    ) ,
+    data = list(
+        Total_RIB = yr09_df$Total_RIB,
+        SiteName = yr09_df$site_index,
+        psrediss3 = yr09_df$psrediss3,
+        dist_mat = as.matrix(dist_mat_km)
+    ) ,
+    warmup = 2000,
+    iter = 1e4,
+    chains = 4
+)
+
+precis(GP_Rib_09,depth=2)
+
+# extracting the posteriors for the 09 model
+
+post_09 <- extract.samples(GP_Rib_09)
+
+# plotting the decay rate
+
+
+curve( median(post_09$etasq)*exp(-median(post_09$rhosq) * x^2), from=0,
+       to=5, ylab = "Covariance", xlab="Distance in km", lwd=3, main="2009")
+
+for( i in 1:150){
+    curve(post_09$etasq[i]*exp(- post_09$rhosq[i] * x^2) , add=T, 
+    col = col.alpha("black", .2) )
+}
+
+
+```
+
+
+Working on 2010
+
+```{r}
+yr10_df <- filter( raw.df, AssmtYear_1 == 2010 )
+
+yr10_df$site_index <- 1:nrow(yr10_df)
+distinct_df <- yr10_df %>%
+                group_by(SiteName, Latitude_1, Longitude_1) %>%
+                distinct(SiteName)
+
+# Distance matrix based on euclidian distance from lat and long in meters
+dist_mat <- geosphere::distm(distinct_df[,3:2]) 
+
+# adding row and column names
+
+rownames(dist_mat) <- distinct_df$SiteName
+colnames(dist_mat) <- distinct_df$SiteName
+
+dist_mat_km <- dist_mat/1000
+
+
+GP_Rib_10 <- map2stan(
+    alist(
+        Total_RIB ~ dgampois( lambda, scale),
+        log( lambda ) <- gp[SiteName] + 1*log(psrediss3),
+        #tercept
+        b <- 1, # fixed value for our offset
+        scale ~ dcauchy(0,1), # overdisersion parameter for our gamma poisson 
+        gp[SiteName] ~ GPL2( dist_mat, etasq, rhosq, 0.1 ), # GP process
+        etasq ~ dcauchy(0,1), # eta prior for max covaraince
+        rhosq ~ dcauchy(0,1) # rho prior for decay rate
+    ) ,
+    data = list(
+        Total_RIB = yr10_df$Total_RIB,
+        SiteName = yr10_df$site_index,
+        psrediss3 = yr10_df$psrediss3,
+        dist_mat = as.matrix(dist_mat_km)
+    ) ,
+    warmup = 2000,
+    iter = 1e4,
+    chains = 4
+)
+
+precis(GP_Rib_10,depth=2)
+
+# extracting the posteriors for the 09 model
+
+post_10 <- extract.samples(GP_Rib_10)
+
+# plotting the decay rate
+
+
+curve( median(post_10$etasq)*exp(-median(post_10$rhosq) * x^2), from=0,
+       to=5, ylab = "Covariance", xlab="Distance in km", lwd=3, main="2010")
+
+for( i in 1:150){
+    curve(post_10$etasq[i]*exp(- post_10$rhosq[i] * x^2) , add=T, 
+    col = col.alpha("black", .2) )
+}
 
 
 ```
